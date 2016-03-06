@@ -23,39 +23,36 @@
 
 // https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox/Frame_script_environment
 
-(function() {
+(function(context) {
 
     'use strict';
 
-    if ( !this.docShell ) {
+    if ( !context.content ) {
         return;
     }
 
-    let {LocationChangeListener} = Components.utils.import(
-        Components.stack.filename.replace('Script', 'Module'),
+    let {contentObserver} = Components.utils.import(
+        Components.stack.filename.replace('Script0', 'Module'),
         null
     );
 
-    // https://github.com/gorhill/uBlock/issues/1444
-    // Apparently the same context is used for all extensions, hence we must use
-    // scoped variables to ensure no collision.
-    let locationChangeListener;
+    let injectContentScripts = function(win) {
+        if ( !win || !win.document ) {
+            return;
+        }
 
-    // This listener allows to keep `locationChangeListener` alive.
-    let shutdown = function(ev) {
-        if ( ev.target === this ) {
-            this.removeEventListener('unload', shutdown);
+        contentObserver.observe(win.document);
+
+        if ( win.frames && win.frames.length ) {
+            let i = win.frames.length;
+            while ( i-- ) {
+                injectContentScripts(win.frames[i]);
+            }
         }
     };
-    this.addEventListener('unload', shutdown);
 
-    let webProgress = this.docShell
-                          .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                          .getInterface(Components.interfaces.nsIWebProgress);
-    if ( webProgress && webProgress.isTopLevel ) {
-        locationChangeListener = new LocationChangeListener(this.docShell, webProgress);
-    }
+    injectContentScripts(context.content);
 
-}).call(this);
+})(this);
 
 /******************************************************************************/
