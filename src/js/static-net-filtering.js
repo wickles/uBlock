@@ -1407,6 +1407,8 @@ FilterParser.prototype.parseOptions = function(s) {
             this.unsupported = true;
             break;
         }
+        // Not needed if we are okay with $document exceptions
+        /*
         if ( opt === 'document' ) {
             if ( this.action === BlockAction ) {
                 this.parseOptType('document', not);
@@ -1415,6 +1417,7 @@ FilterParser.prototype.parseOptions = function(s) {
             this.unsupported = true;
             break;
         }
+        */
         if ( this.toNormalizedType.hasOwnProperty(opt) ) {
             this.parseOptType(opt, not);
             continue;
